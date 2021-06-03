@@ -52,34 +52,56 @@ services:
     stop_signal: SIGKILL
 
 
-  xo-tp-python:
+  # xo-tp-python:
+  #   build:
+  #     context: .
+  #     dockerfile: examples/xo_python/Dockerfile
+  #     args:
+  #       - http_proxy
+  #       - https_proxy
+  #       - no_proxy
+  #   image: xo-tp-python-local:${ISOLATION_ID}
+  #   volumes:
+  #     - ./:/project/sawtooth-sdk-python
+  #   container_name: xo-tp-python-local
+  #   depends_on:
+  #     - validator
+  #   command: |
+  #     bash -c "
+  #       bin/protogen
+  #       cd examples/xo_python
+  #       python3 setup.py clean --all
+  #       python3 setup.py build
+  #       xo-tp-python -vv -C tcp://validator:4004
+  #     "
+  #   stop_signal: SIGKILL
+
+
+  # client:
+  #   image: hyperledger/sawtooth-shell:nightly
+  #   container_name: sawtooth-shell
+  #   depends_on:
+  #     - validator
+  #   command: |
+  #     bash -c "
+  #       sawtooth keygen &&
+  #       tail -f /dev/null
+  #     "
+  #   stop_signal: SIGKILL
+
+
+  client:
     build:
       context: .
-      dockerfile: examples/xo_python/Dockerfile
+      dockerfile: shell/Dockerfile
       args:
         - http_proxy
         - https_proxy
         - no_proxy
-    image: xo-tp-python-local:${ISOLATION_ID}
+    image: sawtooth-shell-local:${ISOLATION_ID}
     volumes:
       - ./:/project/sawtooth-sdk-python
-    container_name: xo-tp-python-local
-    depends_on:
-      - validator
-    command: |
-      bash -c "
-        bin/protogen
-        cd examples/xo_python
-        python3 setup.py clean --all
-        python3 setup.py build
-        xo-tp-python -vv -C tcp://validator:4004
-      "
-    stop_signal: SIGKILL
-
-
-  client:
-    image: hyperledger/sawtooth-shell:nightly
-    container_name: sawtooth-shell
+    container_name: sawtooth-shell-local
     depends_on:
       - validator
     command: |
