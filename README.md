@@ -1,7 +1,6 @@
-![Hyperledger Sawtooth](https://raw.githubusercontent.com/hyperledger/sawtooth-core/master/images/sawtooth_logo_light_blue-small.png)
-
 # Blockchain-based Continuous Integration
 
+[description here]
 
 # Usage
 Clone the BBCI-prototype repository, then make sure that you have the docker engine and docker-compose installed on your machine.
