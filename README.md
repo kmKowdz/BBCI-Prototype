@@ -1,4 +1,4 @@
-# Blockchain-based Continuous Integration
+# Blockchain-based Continuous Integration Prototype
 
 [description here]
 
