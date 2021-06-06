@@ -64,11 +64,11 @@ class IntkeyClient:
     def set(self, name, value, wait=None):
         return self._send_transaction('set', name, value, wait=wait)
 
-    def inc(self, name, value, wait=None):
-        return self._send_transaction('inc', name, value, wait=wait)
+    # def inc(self, name, value, wait=None):
+    #     return self._send_transaction('inc', name, value, wait=wait)
 
-    def dec(self, name, value, wait=None):
-        return self._send_transaction('dec', name, value, wait=wait)
+    # def dec(self, name, value, wait=None):
+    #     return self._send_transaction('dec', name, value, wait=wait)
 
     def list(self):
         result = self._send_request(
