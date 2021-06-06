@@ -27,7 +27,8 @@ from sawtooth_sdk.processor.exceptions import InternalError
 LOGGER = logging.getLogger(__name__)
 
 
-VALID_VERBS = 'set', 'inc', 'dec'
+VALID_VERBS = 'set'
+# , 'inc', 'dec'
 
 MIN_VALUE = 0
 MAX_VALUE = 4294967295
@@ -106,7 +107,8 @@ def _decode_transaction(transaction):
 
 def _validate_verb(verb):
     if verb not in VALID_VERBS:
-        raise InvalidTransaction('Verb must be "set", "inc", or "dec"')
+        # raise InvalidTransaction('Verb must be "set", "inc", or "dec"')
+        raise InvalidTransaction('Verb must be "set"')
 
 
 def _validate_name(name):
@@ -115,6 +117,12 @@ def _validate_name(name):
             'Name must be a string of no more than {} characters'.format(
                 MAX_NAME_LENGTH))
 
+
+# def _validate_value(value):
+#     if not isinstance(value, str) or len(value) > MAX_NAME_LENGTH:
+#         raise InvalidTransaction(
+#             'Value must be a string of no more than {} characters'.format(
+#                 MAX_NAME_LENGTH))
 
 def _validate_value(value):
     if not isinstance(value, int) or value < 0 or value > MAX_VALUE:
@@ -152,8 +160,8 @@ def _set_state_data(name, state, context):
 def _do_intkey(verb, name, value, state):
     verbs = {
         'set': _do_set,
-        'inc': _do_inc,
-        'dec': _do_dec,
+        # 'inc': _do_inc,
+        # 'dec': _do_dec,
     }
 
     try:
@@ -175,49 +183,49 @@ def _do_set(name, value, state):
 
     updated = dict(state.items())
     updated[name] = value
-
+    
     return updated
 
 
-def _do_inc(name, value, state):
-    msg = 'Incrementing "{n}" by {v}'.format(n=name, v=value)
-    LOGGER.debug(msg)
+# def _do_inc(name, value, state):
+#     msg = 'Incrementing "{n}" by {v}'.format(n=name, v=value)
+#     LOGGER.debug(msg)
 
-    if name not in state:
-        raise InvalidTransaction(
-            'Verb is "inc" but name "{}" not in state'.format(name))
+#     if name not in state:
+#         raise InvalidTransaction(
+#             'Verb is "inc" but name "{}" not in state'.format(name))
 
-    curr = state[name]
-    incd = curr + value
+#     curr = state[name]
+#     incd = curr + value
 
-    if incd > MAX_VALUE:
-        raise InvalidTransaction(
-            'Verb is "inc", but result would be greater than {}'.format(
-                MAX_VALUE))
+#     if incd > MAX_VALUE:
+#         raise InvalidTransaction(
+#             'Verb is "inc", but result would be greater than {}'.format(
+#                 MAX_VALUE))
 
-    updated = dict(state.items())
-    updated[name] = incd
+#     updated = dict(state.items())
+#     updated[name] = incd
 
-    return updated
+#     return updated
 
 
-def _do_dec(name, value, state):
-    msg = 'Decrementing "{n}" by {v}'.format(n=name, v=value)
-    LOGGER.debug(msg)
+# def _do_dec(name, value, state):
+#     msg = 'Decrementing "{n}" by {v}'.format(n=name, v=value)
+#     LOGGER.debug(msg)
 
-    if name not in state:
-        raise InvalidTransaction(
-            'Verb is "dec" but name "{}" not in state'.format(name))
+#     if name not in state:
+#         raise InvalidTransaction(
+#             'Verb is "dec" but name "{}" not in state'.format(name))
 
-    curr = state[name]
-    decd = curr - value
+#     curr = state[name]
+#     decd = curr - value
 
-    if decd < MIN_VALUE:
-        raise InvalidTransaction(
-            'Verb is "dec", but result would be less than {}'.format(
-                MIN_VALUE))
+#     if decd < MIN_VALUE:
+#         raise InvalidTransaction(
+#             'Verb is "dec", but result would be less than {}'.format(
+#                 MIN_VALUE))
 
-    updated = dict(state.items())
-    updated[name] = decd
+#     updated = dict(state.items())
+#     updated[name] = decd
 
-    return updated
+#     return updated
