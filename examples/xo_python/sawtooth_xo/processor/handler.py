@@ -63,7 +63,7 @@ class XoTransactionHandler(TransactionHandler):
                         auth_signer="")
 
             xo_state.set_project(xo_payload.name, project)
-            _display("Authorized signer {} created a project.".format(signer[:6]))
+            _display("Signer {} created a project.".format(signer[:6]))
 
         elif xo_payload.action == 'record':
             project = xo_state.get_project(xo_payload.name)
@@ -87,7 +87,7 @@ class XoTransactionHandler(TransactionHandler):
                 project.auth_signer = signer
 
             if project.build_no == '':
-                project.build_no = xo_payload.project
+                project.build_no = xo_payload.build_no
             
             if project.state == '':
                 project.state = xo_payload.state
