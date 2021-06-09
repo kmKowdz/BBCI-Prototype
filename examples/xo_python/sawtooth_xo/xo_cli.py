@@ -290,7 +290,7 @@ def create_parser(prog_name):
     add_create_parser(subparsers, parent_parser)
     add_list_parser(subparsers, parent_parser)
     add_show_parser(subparsers, parent_parser)
-    add_take_parser(subparsers, parent_parser)
+    add_record_parser(subparsers, parent_parser)
 
     return parser
 
