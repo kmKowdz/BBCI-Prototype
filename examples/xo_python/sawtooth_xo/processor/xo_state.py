@@ -26,14 +26,12 @@ def _make_xo_address(name):
         hashlib.sha512(name.encode('utf-8')).hexdigest()[:64]
 
 
-class Game:
-    def __init__(self, name, board, state, player1, player2):
+class Project:
+    def __init__(self, name, build_no, state, auth_signer):
         self.name = name
-        self.board = board
+        self.build_no = build_no
         self.state = state
-        self.player1 = player1
-        self.player2 = player2
-
+        self.auth_signer = auth_signer
 
 class XoState:
 
@@ -50,54 +48,36 @@ class XoState:
         self._context = context
         self._address_cache = {}
 
-    def delete_game(self, game_name):
-        """Delete the Game named game_name from state.
+    def set_project(self, project_name, project):
+        """Store the project in the validator state.
 
         Args:
-            game_name (str): The name.
-
-        Raises:
-            KeyError: The Game with game_name does not exist.
+            project_name (str): The name.
+            project (Project): The information specifying the current project.
         """
 
-        games = self._load_games(game_name=game_name)
+        projects = self._load_projects(project_name=project_name)
 
-        del games[game_name]
-        if games:
-            self._store_game(game_name, games=games)
-        else:
-            self._delete_game(game_name)
+        projects[project_name] = project
 
-    def set_game(self, game_name, game):
-        """Store the game in the validator state.
+        self._store_project(project_name, projects=projects)
+
+    def get_project(self, project_name):
+        """Get the project associated with project_name.
 
         Args:
-            game_name (str): The name.
-            game (Game): The information specifying the current game.
-        """
-
-        games = self._load_games(game_name=game_name)
-
-        games[game_name] = game
-
-        self._store_game(game_name, games=games)
-
-    def get_game(self, game_name):
-        """Get the game associated with game_name.
-
-        Args:
-            game_name (str): The name.
+            project_name (str): The name.
 
         Returns:
-            (Game): All the information specifying a game.
+            (Project): All the information specifying a project.
         """
 
-        return self._load_games(game_name=game_name).get(game_name)
+        return self._load_projects(project_name=project_name).get(project_name)
 
-    def _store_game(self, game_name, games):
-        address = _make_xo_address(game_name)
+    def _store_project(self, project_name, projects):
+        address = _make_xo_address(project_name)
 
-        state_data = self._serialize(games)
+        state_data = self._serialize(projects)
 
         self._address_cache[address] = state_data
 
@@ -105,24 +85,15 @@ class XoState:
             {address: state_data},
             timeout=self.TIMEOUT)
 
-    def _delete_game(self, game_name):
-        address = _make_xo_address(game_name)
-
-        self._context.delete_state(
-            [address],
-            timeout=self.TIMEOUT)
-
-        self._address_cache[address] = None
-
-    def _load_games(self, game_name):
-        address = _make_xo_address(game_name)
+    def _load_projects(self, project_name):
+        address = _make_xo_address(project_name)
 
         if address in self._address_cache:
             if self._address_cache[address]:
                 serialized_games = self._address_cache[address]
-                games = self._deserialize(serialized_games)
+                projects = self._deserialize(serialized_games)
             else:
-                games = {}
+                projects = {}
         else:
             state_entries = self._context.get_state(
                 [address],
@@ -131,50 +102,50 @@ class XoState:
 
                 self._address_cache[address] = state_entries[0].data
 
-                games = self._deserialize(data=state_entries[0].data)
+                projects = self._deserialize(data=state_entries[0].data)
 
             else:
                 self._address_cache[address] = None
-                games = {}
+                projects = {}
 
-        return games
+        return projects
 
     def _deserialize(self, data):
         """Take bytes stored in state and deserialize them into Python
-        Game objects.
+        Project objects.
 
         Args:
             data (bytes): The UTF-8 encoded string stored in state.
 
         Returns:
-            (dict): game name (str) keys, Game values.
+            (dict): project name (str) keys, Project values.
         """
 
-        games = {}
+        projects = {}
         try:
-            for game in data.decode().split("|"):
-                name, board, state, player1, player2 = game.split(",")
+            for project in data.decode().split("|"):
+                name, build_no, state, auth_signer = project.split(",")
 
-                games[name] = Game(name, board, state, player1, player2)
+                projects[name] = Project(name, build_no, state, auth_signer)
         except ValueError as e:
-            raise InternalError("Failed to deserialize game data") from e
+            raise InternalError("Failed to deserialize project data") from e
 
-        return games
+        return projects
 
-    def _serialize(self, games):
-        """Takes a dict of game objects and serializes them into bytes.
+    def _serialize(self, projects):
+        """Takes a dict of project objects and serializes them into bytes.
 
         Args:
-            games (dict): game name (str) keys, Game values.
+            projects (dict): project name (str) keys, Project values.
 
         Returns:
             (bytes): The UTF-8 encoded string stored in state.
         """
 
-        game_strs = []
-        for name, g in games.items():
-            game_str = ",".join(
-                [name, g.board, g.state, g.player1, g.player2])
-            game_strs.append(game_str)
+        project_strs = []
+        for name, p in projects.items():
+            proj_str = ",".join(
+                [name, p.build_no, p.state, p.auth_signer])
+            project_strs.append(proj_str)
 
-        return "|".join(sorted(game_strs)).encode()
+        return "|".join(sorted(project_strs)).encode()

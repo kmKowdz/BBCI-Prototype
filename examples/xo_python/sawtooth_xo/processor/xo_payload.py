@@ -21,7 +21,7 @@ class XoPayload:
     def __init__(self, payload):
         try:
             # The payload is csv utf-8 encoded string
-            name, action, space = payload.decode().split(",")
+            name, action, build_no = payload.decode().split(",")
         except ValueError as e:
             raise InvalidTransaction("Invalid payload serialization") from e
 
@@ -34,25 +34,25 @@ class XoPayload:
         if not action:
             raise InvalidTransaction('Action is required')
 
-        if action not in ('create', 'take', 'delete'):
+        if action not in ('create', 'record'):
             raise InvalidTransaction('Invalid action: {}'.format(action))
 
-        if action == 'take':
+        if action == 'record':
             try:
 
-                if int(space) not in range(1, 10):
+                if int(build_no) not in range(1, 1000):
                     raise InvalidTransaction(
-                        "Space must be an integer from 1 to 9")
+                        "Build Number must be an integer")
             except ValueError:
                 raise InvalidTransaction(
-                    'Space must be an integer from 1 to 9') from ValueError
+                    'Build Number must be an integer') from ValueError
 
-        if action == 'take':
-            space = int(space)
+        if action == 'record':
+            build_no = int(build_no)
 
         self._name = name
         self._action = action
-        self._space = space
+        self._build_no = build_no
 
     @staticmethod
     def from_bytes(payload):
@@ -67,5 +67,5 @@ class XoPayload:
         return self._action
 
     @property
-    def space(self):
-        return self._space
+    def build_no(self):
+        return self._build_no
