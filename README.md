@@ -14,6 +14,7 @@ This command starts all BBCI components in separate containers.
 
 The available HTTP endpoints are:
 
-
-Client: http://localhost:8040 \
-Sawtooth REST API: http://localhost:8008
+Sawtooth REST API: http://localhost:8008 \
+Batches: http://localhost:8008/batches \
+Blocks: http://localhost:8008/blocks \
+State: http://localhost:8008/state
