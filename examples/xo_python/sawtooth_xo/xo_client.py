@@ -73,11 +73,13 @@ class XoClient:
             auth_user=auth_user,
             auth_password=auth_password)
 
-    def take(self, name, space, wait=None, auth_user=None, auth_password=None):
+    def record(self, name, build_no, build_status, wait=None, \
+        auth_user=None, auth_password=None):
         return self._send_xo_txn(
             name,
-            "take",
-            space,
+            "record",
+            build_no,
+            build_status,
             wait=wait,
             auth_user=auth_user,
             auth_password=auth_password)
@@ -100,19 +102,19 @@ class XoClient:
         except BaseException:
             return None
 
-    def show(self, name, auth_user=None, auth_password=None):
-        address = self._get_address(name)
+    # def show(self, name, auth_user=None, auth_password=None):
+    #     address = self._get_address(name)
 
-        result = self._send_request(
-            "state/{}".format(address),
-            name=name,
-            auth_user=auth_user,
-            auth_password=auth_password)
-        try:
-            return base64.b64decode(yaml.safe_load(result)["data"])
+    #     result = self._send_request(
+    #         "state/{}".format(address),
+    #         name=name,
+    #         auth_user=auth_user,
+    #         auth_password=auth_password)
+    #     try:
+    #         return base64.b64decode(yaml.safe_load(result)["data"])
 
-        except BaseException:
-            return None
+    #     except BaseException:
+    #         return None
 
     def _get_status(self, batch_id, wait, auth_user=None, auth_password=None):
         try:
@@ -129,8 +131,8 @@ class XoClient:
 
     def _get_address(self, name):
         xo_prefix = self._get_prefix()
-        game_address = _sha512(name.encode('utf-8'))[0:64]
-        return xo_prefix + game_address
+        project_address = _sha512(name.encode('utf-8'))[0:64]
+        return xo_prefix + project_address
 
     def _send_request(self,
                       suffix,
@@ -161,7 +163,7 @@ class XoClient:
                 result = requests.get(url, headers=headers)
 
             if result.status_code == 404:
-                raise XoException("No such game: {}".format(name))
+                raise XoException("No such project: {}".format(name))
 
             if not result.ok:
                 raise XoException("Error {}: {}".format(
@@ -179,12 +181,13 @@ class XoClient:
     def _send_xo_txn(self,
                      name,
                      action,
-                     space="",
+                     build_no="",
                      wait=None,
                      auth_user=None,
                      auth_password=None):
+
         # Serialization is just a delimited utf-8 encoded string
-        payload = ",".join([name, action, str(space)]).encode()
+        payload = ",".join([name, action, str(build_no)]).encode()
 
         # Construct the address
         address = self._get_address(name)

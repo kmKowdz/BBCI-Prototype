@@ -127,8 +127,9 @@ def add_list_parser(subparsers, parent_parser):
     parser = subparsers.add_parser(
         'list',
         help='Displays information for all xo projects',
-        description='Displays information for all xo projects in state, showing '
-        'the authorized signer, the project state, and the build_no for each project.',
+        description='Displays information for all xo projects in state, '
+        'showing the authorized signer, the project state, and the build_no '
+        'for each project.',
         parents=[parent_parser])
 
     parser.add_argument(
@@ -159,53 +160,53 @@ def add_list_parser(subparsers, parent_parser):
         'is using Basic Auth')
 
 
-def add_show_parser(subparsers, parent_parser):
-    parser = subparsers.add_parser(
-        'show',
-        help='Displays information about an xo project',
-        description='Displays the xo project <name>, showing the authorized signer, '
-        'the project state, and the build_no',
-        parents=[parent_parser])
+# def add_show_parser(subparsers, parent_parser):
+#     parser = subparsers.add_parser(
+#         'show',
+#         help='Displays information about an xo project',
+#         description='Displays the xo project <name>, showing the authorized signer, '
+#         'the project state, and the build_no',
+#         parents=[parent_parser])
 
-    parser.add_argument(
-        'name',
-        type=str,
-        help='identifier for the project')
+#     parser.add_argument(
+#         'name',
+#         type=str,
+#         help='identifier for the project')
 
-    parser.add_argument(
-        '--url',
-        type=str,
-        help='specify URL of REST API')
+#     parser.add_argument(
+#         '--url',
+#         type=str,
+#         help='specify URL of REST API')
 
-    parser.add_argument(
-        '--username',
-        type=str,
-        help="identify name of user's private key file")
+#     parser.add_argument(
+#         '--username',
+#         type=str,
+#         help="identify name of user's private key file")
 
-    parser.add_argument(
-        '--key-dir',
-        type=str,
-        help="identify directory of user's private key file")
+#     parser.add_argument(
+#         '--key-dir',
+#         type=str,
+#         help="identify directory of user's private key file")
 
-    parser.add_argument(
-        '--auth-user',
-        type=str,
-        help='specify username for authentication if REST API '
-        'is using Basic Auth')
+#     parser.add_argument(
+#         '--auth-user',
+#         type=str,
+#         help='specify username for authentication if REST API '
+#         'is using Basic Auth')
 
-    parser.add_argument(
-        '--auth-password',
-        type=str,
-        help='specify password for authentication if REST API '
-        'is using Basic Auth')
+#     parser.add_argument(
+#         '--auth-password',
+#         type=str,
+#         help='specify password for authentication if REST API '
+#         'is using Basic Auth')
 
 def add_record_parser(subparsers, parent_parser):
     parser = subparsers.add_parser(
         'record',
         help='Creates a build record in an xo project',
-        description='Sends a transaction for a new build instance in the xo project '
-        'with the identifier <name>. This transaction will fail if the '
-        'specified project does not exist.',
+        description='Sends a transaction for a new build instance in the '
+        'xo project with the identifier <name>. This transaction will fail '
+        'if the specified project does not exist.',
         parents=[parent_parser])
 
     parser.add_argument(
@@ -214,9 +215,14 @@ def add_record_parser(subparsers, parent_parser):
         help='identifier for the project')
 
     parser.add_argument(
-        'build_no',
+        'build',
         type=int,
         help='build number of the project')
+
+    parser.add_argument(
+        'status',
+        type=str,
+        help='build status of the project')
 
     parser.add_argument(
         '--url',
@@ -250,7 +256,7 @@ def add_record_parser(subparsers, parent_parser):
         nargs='?',
         const=sys.maxsize,
         type=int,
-        help='set time, in seconds, to wait for take transaction '
+        help='set time, in seconds, to wait for record transaction '
         'to commit')
 
 
@@ -280,7 +286,8 @@ def create_parser(prog_name):
     parent_parser = create_parent_parser(prog_name)
 
     parser = argparse.ArgumentParser(
-        description='Provides subcommands to update project by sending XO transactions.',
+        description='Provides subcommands to update project by sending '
+        'XO transactions.',
         parents=[parent_parser])
 
     subparsers = parser.add_subparsers(title='subcommands', dest='command')
@@ -289,7 +296,7 @@ def create_parser(prog_name):
 
     add_create_parser(subparsers, parent_parser)
     add_list_parser(subparsers, parent_parser)
-    add_show_parser(subparsers, parent_parser)
+    # add_show_parser(subparsers, parent_parser)
     add_record_parser(subparsers, parent_parser)
 
     return parser
@@ -310,44 +317,70 @@ def do_list(args):
 
     if project_list is not None:
         fmt = "%-15s %-15.15s %-15.15s %s"
-        print(fmt % ('NAME', 'SIGNER', 'BUILD NO', 'STATE'))
+        print(fmt % ('PROJECT', 'SIGNER', 'BUILD NO', 'STATUS'))
+        # fmt = "%-15s"
+        # print(fmt % ('NAME'))
         for project_data in project_list:
-
-            name, build_no, project_state, auth_signer = project_data
-
-            print(fmt % (name, auth_signer[:6], build_no, project_state))
+            print(fmt % (
+                project_data[0],
+                project_data[1],
+                project_data[2],
+                project_data[3]))
     else:
         raise XoException("Could not retrieve project listing.")
 
 
-def do_show(args):
-    name = args.name
+# def do_show(args):
+#     name = args.name
 
-    url = _get_url(args)
-    auth_user, auth_password = _get_auth_info(args)
+#     url = _get_url(args)
+#     auth_user, auth_password = _get_auth_info(args)
 
-    client = XoClient(base_url=url, keyfile=None)
+#     client = XoClient(base_url=url, keyfile=None)
 
-    data = client.show(name, auth_user=auth_user, auth_password=auth_password)
+#     data = client.show(name, auth_user=auth_user, auth_password=auth_password)
 
-    if data is not None:
+#     if data is not None:
 
-        build_no, project_state, auth_signer = {
-            name: (build_no, state, authsigner)
-            for name, build_no, state, authsigner in [
-                project.split(',')
-                for project in data.decode().split('|')
-            ]
-        }[name]
+#         # build_no, project_state, auth_signer = {
+#         #     name: (build_no, state, authsigner)
+#         #     for name, build_no, state, authsigner in data
+                
+#         # }[name]
 
-        print("NAME:       : {}".format(name))
-        print("SIGNER      : {}".format(auth_signer[:6]))
-        print("BUILD NO    : {}".format(build_no))
-        print("STATE       : {}".format(project_state))
-        print("")
 
-    else:
-        raise XoException("Project not found: {}".format(name))
+#         # {
+#         #     name: (build_no, state, authsigner)
+#         #     for name, build_no, state, authsigner in [
+#         #         data.decode().split(',')
+#         #         for project in data.decode().split('|')
+#         #     ]
+#         # }[name]
+
+#         # build_no, project_state, auth_signer = {
+#         #     name: (build_no, state, authsigner)
+#         #     for name, build_no, state, authsigner in [
+#         #         project.split(',')
+#         #         for project in data.decode().split('|')
+#         #     ]
+#         # }[name]
+
+#         build_no, project_state, auth_signer = {
+#             name: (build_no, state, authsigner)
+#             for name, build_no, state, authsigner in [
+#                 data.decode().split(',')
+#                 # for project in data.decode().split('|')
+#             ]
+#         }[name]
+
+#         print("NAME:       : {}".format(name))
+#         print("SIGNER      : {}".format(auth_signer[:6]))
+#         print("BUILD NO    : {}".format(build_no))
+#         print("STATE       : {}".format(project_state))
+#         print("")
+
+#     else:
+#         raise XoException("Project not found: {}".format(name))
 
 
 def do_create(args):
@@ -374,7 +407,8 @@ def do_create(args):
 
 def do_record(args):
     name = args.name
-    space = args.space
+    build_no = args.build
+    build_status = args.status
 
     url = _get_url(args)
     keyfile = _get_keyfile(args)
@@ -383,13 +417,13 @@ def do_record(args):
     client = XoClient(base_url=url, keyfile=keyfile)
 
     if args.wait and args.wait > 0:
-        response = client.take(
-            name, space, wait=args.wait,
+        response = client.record(
+            name, build_no, build_status, wait=args.wait,
             auth_user=auth_user,
             auth_password=auth_password)
     else:
-        response = client.take(
-            name, space,
+        response = client.record(
+            name, build_no, build_status,
             auth_user=auth_user,
             auth_password=auth_password)
 
@@ -434,8 +468,8 @@ def main(prog_name=os.path.basename(sys.argv[0]), args=None):
         do_create(args)
     elif args.command == 'list':
         do_list(args)
-    elif args.command == 'show':
-        do_show(args)
+    # elif args.command == 'show':
+    #     do_show(args)
     elif args.command == 'record':
         do_record(args)
     else:
