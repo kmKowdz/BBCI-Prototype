@@ -34,6 +34,15 @@ services:
         cp /tmp/*.deb /build/debs
       "
 
+  bci-tp-python:
+    image: sawtooth-bci-tp-python:${ISOLATION_ID}
+    volumes:
+      - ../../build/debs:/build/debs
+    command: |
+      bash -c "
+        cp /tmp/*.deb /build/debs
+      "
+
   python-sdk:
     image: sawtooth-sdk-python:${ISOLATION_ID}
     volumes:
