@@ -21,7 +21,7 @@ class XoPayload:
     def __init__(self, payload):
         try:
             # The payload is csv utf-8 encoded string
-            name, action, build_no = payload.decode().split(",")
+            name, action, build_no, build_status = payload.decode().split(",")
         except ValueError as e:
             raise InvalidTransaction("Invalid payload serialization") from e
 
@@ -34,7 +34,7 @@ class XoPayload:
         if not action:
             raise InvalidTransaction('Action is required')
 
-        if action not in ('create', 'record'):
+        if action not in ('create', 'record', 'list'):
             raise InvalidTransaction('Invalid action: {}'.format(action))
 
         if action == 'record':
@@ -53,6 +53,7 @@ class XoPayload:
         self._name = name
         self._action = action
         self._build_no = build_no
+        self._build_status = build_status
 
     @staticmethod
     def from_bytes(payload):
@@ -69,3 +70,7 @@ class XoPayload:
     @property
     def build_no(self):
         return self._build_no
+
+    @property
+    def build_status(self):
+        return self._build_status

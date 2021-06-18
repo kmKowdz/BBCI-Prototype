@@ -27,10 +27,10 @@ def _make_xo_address(name):
 
 
 class Project:
-    def __init__(self, name, build_no, state, auth_signer):
+    def __init__(self, name, build_no, build_status, auth_signer):
         self.name = name
         self.build_no = build_no
-        self.state = state
+        self.build_status = build_status
         self.auth_signer = auth_signer
 
 class XoState:
@@ -90,8 +90,8 @@ class XoState:
 
         if address in self._address_cache:
             if self._address_cache[address]:
-                serialized_games = self._address_cache[address]
-                projects = self._deserialize(serialized_games)
+                serialized_projects = self._address_cache[address]
+                projects = self._deserialize(serialized_projects)
             else:
                 projects = {}
         else:
@@ -124,9 +124,13 @@ class XoState:
         projects = {}
         try:
             for project in data.decode().split("|"):
-                name, build_no, state, auth_signer = project.split(",")
+                name, build_no, build_status, auth_signer = project.split(",")
 
-                projects[name] = Project(name, build_no, state, auth_signer)
+                projects[name] = Project(
+                    name,
+                    build_no,
+                    build_status,
+                    auth_signer)
         except ValueError as e:
             raise InternalError("Failed to deserialize project data") from e
 
@@ -145,7 +149,7 @@ class XoState:
         project_strs = []
         for name, p in projects.items():
             proj_str = ",".join(
-                [name, p.build_no, p.state, p.auth_signer])
+                [name, p.build_no, p.build_status, p.auth_signer])
             project_strs.append(proj_str)
 
         return "|".join(sorted(project_strs)).encode()

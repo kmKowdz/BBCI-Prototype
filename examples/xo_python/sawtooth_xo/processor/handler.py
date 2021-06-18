@@ -59,7 +59,7 @@ class XoTransactionHandler(TransactionHandler):
 
             project = Project(name=xo_payload.name,
                         build_no="",
-                        state="",
+                        build_status="",
                         auth_signer="")
 
             xo_state.set_project(xo_payload.name, project)
@@ -70,51 +70,65 @@ class XoTransactionHandler(TransactionHandler):
 
             if project is None:
                 raise InvalidTransaction(
-                    'Invalid action: Record action requires an existing project')
+                    'Invalid action: Record action requires an '
+                    'existing project')
 
-            if project.state in ('SUCCESS', 'FAILURE'):
-                raise InvalidTransaction('Invalid Action: Build record already exist.')
+            if project.build_status in ('SUCCESS', 'FAILURE'):
+                raise InvalidTransaction('Invalid Action: Build status '
+                    'already recorded.')
 
-            if (project.auth_signer != signer):
-                raise InvalidTransaction('Invalid Action: Record action requires an authorized signer')
+            if project.auth_signer != signer:
+                raise InvalidTransaction('Invalid Action: Record action '
+                    'requires an authorized signer')
 
             if project.build_no != '':
                 raise InvalidTransaction(
                     'Invalid Action: Build Number {} already exist'.format(
                         xo_payload))
 
+            # if project.state != '':
+            #     raise InvalidTransaction(
+            #         'Invalid Action: Build record already exist')
+
             if project.auth_signer == '':
                 project.auth_signer = signer
 
             if project.build_no == '':
                 project.build_no = xo_payload.build_no
-            
-            if project.state == '':
-                project.state = xo_payload.state
+
+            if project.build_status == '':
+                project.build_status = xo_payload.build_status
 
             xo_state.set_project(xo_payload.name, project)
+
             _display(
-                "Authorized signer {} records a build.\n\n".format(
-                    signer[:6])
-                + _project_data_to_str(
+                _project_data_to_str(
                     project.build_no,
-                    project.state,
+                    project.build_status,
                     project.auth_signer,
                     xo_payload.name))
+            # _display(
+            #     "Authorized signer {} records a build.\n\n".format(
+            #         signer[:6])
+            #     + _project_data_to_str(
+            #         project.build_no,
+            #         project.state,
+            #         project.auth_signer,
+            #         xo_payload.name))
 
         else:
             raise InvalidTransaction('Unhandled action: {}'.format(
                 xo_payload.action))
 
 
-def _project_data_to_str(build_no, state, auth_signer, name):
-    out = ""
-    out += "NAME: {}\n".format(name)
-    out += "SIGNER: {}\n".format(auth_signer[:6])
-    out += "BUILD NO: {}\n".format(build_no)
-    out += "STATE: {}\n".format(state)
-    out += "\n"
-    return out
+def _project_data_to_str(build_no, build_status, auth_signer, name):
+    msg = "\n"
+    msg += "NAME: {}\n".format(name)
+    msg += "SIGNER: {}\n".format(auth_signer[:6])
+    msg += "BUILD NO: {}\n".format(build_no)
+    msg += "STATUS: {}\n".format(build_status)
+    msg += "\n"
+    return msg
 
 
 def _display(msg):
@@ -122,13 +136,15 @@ def _display(msg):
 
     if n > 0:
         msg = msg.split("\n")
-        length = max(len(line) for line in msg)
+        # length = max(len(line) for line in msg)
     else:
-        length = len(msg)
+        # length = len(msg)
         msg = [msg]
 
-    # pylint: disable=logging-not-lazy
-    LOGGER.debug("+" + (length + 2) * "-" + "+")
     for line in msg:
-        LOGGER.debug("+ " + line.center(length) + " +")
-    LOGGER.debug("+" + (length + 2) * "-" + "+")
+        LOGGER.debug(line)
+    # pylint: disable=logging-not-lazy
+    # LOGGER.debug("+" + (length + 2) * "-" + "+")
+    # for line in msg:
+        # LOGGER.debug("+ " + line.center(length) + " +")
+    # LOGGER.debug("+" + (length + 2) * "-" + "+")

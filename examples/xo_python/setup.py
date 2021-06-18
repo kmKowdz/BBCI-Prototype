@@ -38,9 +38,9 @@ setup(
     name='sawtooth-xo',
     version=subprocess.check_output(
         ['../../bin/get_version']).decode('utf-8').strip(),
-    description='Sawtooth XO Example',
-    author='Hyperledger Sawtooth',
-    url='https://github.com/hyperledger/sawtooth-sdk-python',
+    description='Sawtooth Blockchain-based CI Example',
+    author='kmKowdz',
+    url='https://github.com/kmKowdz/BBCI-Prototype',
     packages=find_packages(),
     install_requires=[
         'aiohttp',
