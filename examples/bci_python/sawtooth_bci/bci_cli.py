@@ -33,7 +33,6 @@ DISTRIBUTION_NAME = 'sawtooth-bci'
 
 
 # DEFAULT_URL = 'http://127.0.0.1:8008'
-
 DEFAULT_URL = 'rest-api:8008'
 
 
