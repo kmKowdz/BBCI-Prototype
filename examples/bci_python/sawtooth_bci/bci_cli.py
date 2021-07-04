@@ -32,7 +32,9 @@ from sawtooth_bci.bci_exceptions import BCIException
 DISTRIBUTION_NAME = 'sawtooth-bci'
 
 
-DEFAULT_URL = 'http://127.0.0.1:8008'
+# DEFAULT_URL = 'http://127.0.0.1:8008'
+
+DEFAULT_URL = 'rest-api:8008'
 
 
 def create_console_handler(verbose_level):
@@ -160,46 +162,6 @@ def add_list_parser(subparsers, parent_parser):
         'is using Basic Auth')
 
 
-# def add_show_parser(subparsers, parent_parser):
-#     parser = subparsers.add_parser(
-#         'show',
-#         help='Displays information about an bci project',
-#         description='Displays the bci project <name>, showing the authorized signer, '
-#         'the project state, and the build_no',
-#         parents=[parent_parser])
-
-#     parser.add_argument(
-#         'name',
-#         type=str,
-#         help='identifier for the project')
-
-#     parser.add_argument(
-#         '--url',
-#         type=str,
-#         help='specify URL of REST API')
-
-#     parser.add_argument(
-#         '--username',
-#         type=str,
-#         help="identify name of user's private key file")
-
-#     parser.add_argument(
-#         '--key-dir',
-#         type=str,
-#         help="identify directory of user's private key file")
-
-#     parser.add_argument(
-#         '--auth-user',
-#         type=str,
-#         help='specify username for authentication if REST API '
-#         'is using Basic Auth')
-
-#     parser.add_argument(
-#         '--auth-password',
-#         type=str,
-#         help='specify password for authentication if REST API '
-#         'is using Basic Auth')
-
 def add_record_parser(subparsers, parent_parser):
     parser = subparsers.add_parser(
         'record',
@@ -258,7 +220,6 @@ def add_record_parser(subparsers, parent_parser):
         type=int,
         help='set time, in seconds, to wait for record transaction '
         'to commit')
-
 
 def create_parent_parser(prog_name):
     parent_parser = argparse.ArgumentParser(prog=prog_name, add_help=False)
@@ -321,66 +282,21 @@ def do_list(args):
         # fmt = "%-15s"
         # print(fmt % ('NAME'))
         for project_data in project_list:
-            print(fmt % (
-                project_data[0],
-                project_data[1],
-                project_data[2],
-                project_data[3]))
+            # print(fmt % (
+            #     project_data[0],
+            #     project_data[1],
+            #     project_data[2],
+            #     project_data[3]))
+            print(fmt % (project_data))
     else:
         raise BCIException("Could not retrieve project listing.")
-
-
-# def do_show(args):
-#     name = args.name
-
-#     url = _get_url(args)
-#     auth_user, auth_password = _get_auth_info(args)
-
-#     client = BCIClient(base_url=url, keyfile=None)
-
-#     data = client.show(name, auth_user=auth_user, auth_password=auth_password)
-
-#     if data is not None:
-
-#         # build_no, project_state, auth_signer = {
-#         #     name: (build_no, state, authsigner)
-#         #     for name, build_no, state, authsigner in data
-                
-#         # }[name]
-
-
-#         # {
-#         #     name: (build_no, state, authsigner)
-#         #     for name, build_no, state, authsigner in [
-#         #         data.decode().split(',')
-#         #         for project in data.decode().split('|')
-#         #     ]
-#         # }[name]
-
-#         # build_no, project_state, auth_signer = {
-#         #     name: (build_no, state, authsigner)
-#         #     for name, build_no, state, authsigner in [
-#         #         project.split(',')
-#         #         for project in data.decode().split('|')
-#         #     ]
-#         # }[name]
-
-#         build_no, project_state, auth_signer = {
-#             name: (build_no, state, authsigner)
-#             for name, build_no, state, authsigner in [
-#                 data.decode().split(',')
-#                 # for project in data.decode().split('|')
-#             ]
-#         }[name]
-
-#         print("NAME:       : {}".format(name))
-#         print("SIGNER      : {}".format(auth_signer[:6]))
-#         print("BUILD NO    : {}".format(build_no))
-#         print("STATE       : {}".format(project_state))
-#         print("")
-
-#     else:
-#         raise BCIException("Project not found: {}".format(name))
+#alternative
+# def do_list(args):
+#     client = _get_client(args, False)
+#     results = client.list()
+#     for pair in results:
+#         for name, value in pair.items():
+#             print('{}: {}'.format(name, value))
 
 
 def do_create(args):
@@ -468,8 +384,6 @@ def main(prog_name=os.path.basename(sys.argv[0]), args=None):
         do_create(args)
     elif args.command == 'list':
         do_list(args)
-    # elif args.command == 'show':
-    #     do_show(args)
     elif args.command == 'record':
         do_record(args)
     else:

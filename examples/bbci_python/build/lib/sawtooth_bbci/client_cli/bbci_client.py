@@ -1,4 +1,4 @@
-# Copyright 2016 Intel Corporation
+# Copyright 2017 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,13 +15,13 @@
 
 import hashlib
 import base64
-from base64 import b64encode
 import time
 import random
 import requests
 import yaml
+import cbor
 
-from sawtooth_bci.bci_exceptions import BCIException
+from sawtooth_bbci.client_cli.exceptions import BBCIClientException
 
 from sawtooth_signing import create_context
 from sawtooth_signing import CryptoFactory
@@ -39,104 +39,83 @@ def _sha512(data):
     return hashlib.sha512(data).hexdigest()
 
 
-class BCIClient:
-    def __init__(self, base_url, keyfile=None):
+class BBCIClient:
+    def __init__(self, url, keyfile=None):
+        self.url = url
 
-        self._base_url = base_url
+        if keyfile is not None:
+            try:
+                with open(keyfile) as fd:
+                    private_key_str = fd.read().strip()
+                    fd.close()
+            except OSError as err:
+                raise BBCIClientException(
+                    'Failed to read private key: {}'.format(str(err))) from err
 
-        if keyfile is None:
-            self._signer = None
-            return
+            try:
+                private_key = Secp256k1PrivateKey.from_hex(private_key_str)
+            except ParseError as e:
+                raise BBCIClientException(
+                    'Unable to load private key: {}'.format(str(e))) from e
 
-        try:
-            with open(keyfile) as fd:
-                private_key_str = fd.read().strip()
-        except OSError as err:
-            raise BCIException(
-                'Failed to read private key {}: {}'.format(
-                    keyfile, str(err))) from err
+            self._signer = CryptoFactory(
+                create_context('secp256k1')).new_signer(private_key)
 
-        try:
-            private_key = Secp256k1PrivateKey.from_hex(private_key_str)
-        except ParseError as e:
-            raise BCIException(
-                'Unable to load private key: {}'.format(str(e))) from e
+    def set(self, name, value, wait=None):
+        return self._send_transaction('set', name, value, wait=wait)
 
-        self._signer = CryptoFactory(create_context('secp256k1')) \
-            .new_signer(private_key)
-
-    def create(self, name, wait=None, auth_user=None, auth_password=None):
-        return self._send_bci_txn(
-            name,
-            "create",
-            wait=wait,
-            auth_user=auth_user,
-            auth_password=auth_password)
-
-    # def record(self, name, build_no, wait=None,
-    #     auth_user=None, auth_password=None):
-    #     return self._send_bci_txn(
-    #         name,
-    #         "record",
-    #         build_no,
-    #         wait=wait,
-    #         auth_user=auth_user,
-    #         auth_password=auth_password)
-
-    def list(self, auth_user=None, auth_password=None):
-        bci_prefix = self._get_prefix()
-
+    def list(self):
         result = self._send_request(
-            "state?address={}".format(bci_prefix),
-            auth_user=auth_user,
-            auth_password=auth_password)
+            "state?address={}".format(
+                self._get_prefix()))
 
         try:
             encoded_entries = yaml.safe_load(result)["data"]
 
             return [
-                base64.b64decode(entry["data"]) for entry in encoded_entries
+                cbor.loads(base64.b64decode(entry["data"]))
+                for entry in encoded_entries
             ]
 
         except BaseException:
             return None
 
-    def _get_status(self, batch_id, wait, auth_user=None, auth_password=None):
+    def show(self, name):
+        address = self._get_address(name)
+
+        result = self._send_request("state/{}".format(address), name=name,)
+
+        try:
+            return cbor.loads(
+                base64.b64decode(
+                    yaml.safe_load(result)["data"]))[name]
+
+        except BaseException:
+            return None
+
+    def _get_status(self, batch_id, wait):
         try:
             result = self._send_request(
-                'batch_statuses?id={}&wait={}'.format(batch_id, wait),
-                auth_user=auth_user,
-                auth_password=auth_password)
+                'batch_statuses?id={}&wait={}'.format(batch_id, wait),)
             return yaml.safe_load(result)['data'][0]['status']
         except BaseException as err:
-            raise BCIException(err) from err
+            raise BBCIClientException(err) from err
 
     def _get_prefix(self):
-        return _sha512('bci'.encode('utf-8'))[0:6]
+        return _sha512('bbci'.encode('utf-8'))[0:6]
 
     def _get_address(self, name):
-        bci_prefix = self._get_prefix()
-        project_address = _sha512(name.encode('utf-8'))[0:64]
-        return bci_prefix + project_address
+        prefix = self._get_prefix()
+        game_address = _sha512(name.encode('utf-8'))[64:]
+        return prefix + game_address
 
-    def _send_request(self,
-                      suffix,
-                      data=None,
-                      content_type=None,
-                      name=None,
-                      auth_user=None,
-                      auth_password=None):
-        if self._base_url.startswith("http://"):
-            url = "{}/{}".format(self._base_url, suffix)
+    def _send_request(self, suffix, data=None, content_type=None, name=None):
+        if self.url.startswith("http://"):
+            url = "{}/{}".format(self.url, suffix)
         else:
-            url = "http://{}/{}".format(self._base_url, suffix)
+            url = "http://{}/{}".format(self.url, suffix)
 
         headers = {}
-        if auth_user is not None:
-            auth_string = "{}:{}".format(auth_user, auth_password)
-            b64_string = b64encode(auth_string.encode()).decode()
-            auth_header = 'Basic {}'.format(b64_string)
-            headers['Authorization'] = auth_header
 
         if content_type is not None:
             headers['Content-Type'] = content_type
@@ -148,38 +127,34 @@ class BCIClient:
                 result = requests.get(url, headers=headers)
 
             if result.status_code == 404:
-                raise BCIException("No such project: {}".format(name))
+                raise BBCIClientException("No such key: {}".format(name))
 
             if not result.ok:
-                raise BCIException("Error {}: {}".format(
+                raise BBCIClientException("Error {}: {}".format(
                     result.status_code, result.reason))
 
         except requests.ConnectionError as err:
-            raise BCIException(
-                'Failed to connect to {}: {}'.format(url, str(err))) from err
+            raise BBCIClientException(
+                'Failed to connect to REST API: {}'.format(err)) from err
 
         except BaseException as err:
-            raise BCIException(err) from err
+            raise BBCIClientException(err) from err
 
         return result.text
 
-    def _send_bci_txn(self,
-                     name,
-                     action,
-                     wait=None,
-                     auth_user=None,
-                     auth_password=None):
-
-        # Serialization is just a delimited utf-8 encoded string
-        payload = ",".join([name, action]).encode()
-        print(payload)
+    def _send_transaction(self, verb, name, value, wait=None):
+        payload = cbor.dumps({
+            'Verb': verb,
+            'Name': name,
+            'Value': value,
+        })
 
         # Construct the address
-        address = self._get_address(name) #calls a function that transforms encodes the project name in base64, hash it and the bci_prefix is added in the beginning
+        address = self._get_address(name)
 
         header = TransactionHeader(
             signer_public_key=self._signer.get_public_key().as_hex(),
-            family_name="bci",
+            family_name="bbci",
             family_version="1.0",
             inputs=[address],
             outputs=[address],
@@ -206,14 +181,12 @@ class BCIClient:
             response = self._send_request(
                 "batches", batch_list.SerializeToString(),
                 'application/octet-stream',
-                auth_user=auth_user,
-                auth_password=auth_password)
+            )
             while wait_time < wait:
                 status = self._get_status(
                     batch_id,
                     wait - int(wait_time),
-                    auth_user=auth_user,
-                    auth_password=auth_password)
+                )
                 wait_time = time.time() - start_time
 
                 if status != 'PENDING':
@@ -224,8 +197,7 @@ class BCIClient:
         return self._send_request(
             "batches", batch_list.SerializeToString(),
             'application/octet-stream',
-            auth_user=auth_user,
-            auth_password=auth_password)
+        )
 
     def _create_batch_list(self, transactions):
         transaction_signatures = [t.header_signature for t in transactions]

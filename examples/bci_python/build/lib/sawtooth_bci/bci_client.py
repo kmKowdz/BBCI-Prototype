@@ -73,16 +73,15 @@ class BCIClient:
             auth_user=auth_user,
             auth_password=auth_password)
 
-    def record(self, name, build_no, build_status, wait=None, \
-        auth_user=None, auth_password=None):
-        return self._send_bci_txn(
-            name,
-            "record",
-            build_no,
-            build_status,
-            wait=wait,
-            auth_user=auth_user,
-            auth_password=auth_password)
+    # def record(self, name, build_no, wait=None,
+    #     auth_user=None, auth_password=None):
+    #     return self._send_bci_txn(
+    #         name,
+    #         "record",
+    #         build_no,
+    #         wait=wait,
+    #         auth_user=auth_user,
+    #         auth_password=auth_password)
 
     def list(self, auth_user=None, auth_password=None):
         bci_prefix = self._get_prefix()
@@ -101,20 +100,6 @@ class BCIClient:
 
         except BaseException:
             return None
-
-    # def show(self, name, auth_user=None, auth_password=None):
-    #     address = self._get_address(name)
-
-    #     result = self._send_request(
-    #         "state/{}".format(address),
-    #         name=name,
-    #         auth_user=auth_user,
-    #         auth_password=auth_password)
-    #     try:
-    #         return base64.b64decode(yaml.safe_load(result)["data"])
-
-    #     except BaseException:
-    #         return None
 
     def _get_status(self, batch_id, wait, auth_user=None, auth_password=None):
         try:
@@ -181,17 +166,16 @@ class BCIClient:
     def _send_bci_txn(self,
                      name,
                      action,
-                     build_no="",
-                     build_status="",
                      wait=None,
                      auth_user=None,
                      auth_password=None):
 
         # Serialization is just a delimited utf-8 encoded string
-        payload = ",".join([name, action, str(build_no), build_status]).encode()
+        payload = ",".join([name, action]).encode()
+        print(payload)
 
         # Construct the address
-        address = self._get_address(name)
+        address = self._get_address(name) #calls a function that transforms encodes the project name in base64, hash it and the bci_prefix is added in the beginning
 
         header = TransactionHeader(
             signer_public_key=self._signer.get_public_key().as_hex(),
