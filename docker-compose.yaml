@@ -137,7 +137,7 @@ services:
 
 
   validator:
-    image: hyperledger/sawtooth-validator:nightly
+    image: hyperledger/sawtooth-validator:latest
     container_name: sawtooth-validator
     expose:
       - 4004

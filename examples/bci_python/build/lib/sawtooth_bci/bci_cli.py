@@ -32,8 +32,8 @@ from sawtooth_bci.bci_exceptions import BCIException
 DISTRIBUTION_NAME = 'sawtooth-bci'
 
 
-DEFAULT_URL = 'http://127.0.0.1:8008'
-
+# DEFAULT_URL = 'http://127.0.0.1:8008'
+DEFAULT_URL = 'rest-api:8008'
 
 def create_console_handler(verbose_level):
     clog = logging.StreamHandler()
