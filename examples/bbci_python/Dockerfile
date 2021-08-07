@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# docker build -f examples/intkey_python/Dockerfile -t bbci-tp-python-local .
+# docker build -f examples/bbci_python/Dockerfile -t bbci-tp-python-local .
 
 # -------------=== bbci-tp-python build ===-------------
 
@@ -52,6 +52,6 @@ WORKDIR /project/sawtooth-sdk-python
 
 CMD echo "\033[0;32m--- Building bbci-tp-python ---\n\033[0m" \
  && bin/protogen \
- && cd examples/intkey_python \
+ && cd examples/bbci_python \
  && python3 setup.py clean --all \
  && python3 setup.py build

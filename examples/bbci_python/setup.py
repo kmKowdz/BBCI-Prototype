@@ -48,7 +48,7 @@ setup(
     data_files=data_files,
     entry_points={
         'console_scripts': [
-            'bbci = sawtooth_intkey.client_cli.intkey_cli:main_wrapper',
-            'bbci-tp-python = sawtooth_intkey.processor.main:main'
+            'bbci = sawtooth_bbci.client_cli.bbci_cli:main_wrapper',
+            'bbci-tp-python = sawtooth_bbci.processor.main:main'
         ]
     })
