@@ -125,7 +125,7 @@ def create_parser(prog_name):
 
 
 def add_set_parser(subparsers, parent_parser):
-    message = 'Sends an intkey transaction to set <build> to <value>.'
+    message = 'Sends an intkey transaction to set <name> to <value>.'
 
     parser = subparsers.add_parser(
         'set',
