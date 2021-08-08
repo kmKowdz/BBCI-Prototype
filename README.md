@@ -19,16 +19,16 @@ To run the application, navigate to the project's root directory, then use this 
 
 This command starts all BBCI components in separate containers:
 
-sawtooth-rest-api \
-sawtooth-shell \
-intkey-tp-python-local \
-sawtooth-settings-tp \
-sawtooth-devmode-engine-rust \
-sawtooth-validator
+- sawtooth-rest-api
+- sawtooth-shell
+- sawtooth-settings-tp
+- sawtooth-devmode-engine-rust
+- sawtooth-validator
+- intkey-tp-python-local
 
 The available HTTP endpoints are:
 
-Sawtooth REST API: http://localhost:8008 \
-Batches: http://localhost:8008/batches \
-Blocks: http://localhost:8008/blocks \
-State: http://localhost:8008/state
+- Sawtooth REST API: http://localhost:8008
+- Batches: http://localhost:8008/batches
+- Blocks: http://localhost:8008/blocks
+- State: http://localhost:8008/state
