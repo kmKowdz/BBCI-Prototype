@@ -17,7 +17,14 @@ To run the application, navigate to the project's root directory, then use this 
         <p>docker-compose up</p>
     </blockquote>
 
-This command starts all BBCI components in separate containers.
+This command starts all BBCI components in separate containers:
+
+sawtooth-rest-api \
+sawtooth-shell \
+intkey-tp-python-local \
+sawtooth-settings-tp \
+sawtooth-devmode-engine-rust \
+sawtooth-validator
 
 The available HTTP endpoints are:
 
