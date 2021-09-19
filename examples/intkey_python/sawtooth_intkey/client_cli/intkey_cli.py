@@ -42,7 +42,8 @@ from sawtooth_intkey.client_cli.exceptions import IntkeyClientException
 DISTRIBUTION_NAME = 'sawtooth-intkey'
 
 
-DEFAULT_URL = 'http://127.0.0.1:8008'
+# DEFAULT_URL = 'http://127.0.0.1:8008'
+DEFAULT_URL = 'rest-api:8008'
 
 
 def create_console_handler(verbose_level):
